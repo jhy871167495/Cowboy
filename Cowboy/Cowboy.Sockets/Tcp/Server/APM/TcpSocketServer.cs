@@ -143,11 +143,11 @@ namespace Cowboy.Sockets
         {
             if (!_isListening)
                 return;
+            
+            TcpListener listener = (TcpListener)ar.AsyncState;
 
             try
             {
-                TcpListener listener = (TcpListener)ar.AsyncState;
-
                 TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
                 if (!tcpClient.Connected)
                     return;
@@ -165,11 +165,7 @@ namespace Cowboy.Sockets
                     _log.Error(ex.Message, ex);
                 }
 
-                if (isSessionStarted)
-                {
-                    ContinueAcceptSession(listener);
-                }
-                else
+                if (!isSessionStarted)
                 {
                     CloseSession(session); // session was not started
                 }
@@ -181,6 +177,14 @@ namespace Cowboy.Sockets
                     _log.Error(ex.Message, ex);
                 }
                 else throw;
+            }
+            finally
+            {
+                try
+                {
+                    ContinueAcceptSession(listener);
+                }
+                catch { }
             }
         }
 
